@@ -1,0 +1,63 @@
+spring:
+  application:
+    name: sus-smart-assistant
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+  jackson:
+    default-property-inclusion: non_null
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASS:guest}
+    connection-timeout: 5000
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 900000
+
+server:
+  port: ${SERVER_PORT:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# JWT config
+jwt:
+  secret: ${JWT_SECRET:susSm4rtAss1st4ntS3cr3tK3yF0rHackath0n2026!}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+# Assistente IA config
+assistente:
+  ollama:
+    url: ${OLLAMA_URL:http://localhost:11434}
+    model: ${OLLAMA_MODEL:llama3}
+    timeout: ${OLLAMA_TIMEOUT:30000}
+
+logging:
+  level:
+    com.sussmartassistant: INFO
+    org.springframework.security: WARN

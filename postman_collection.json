@@ -1,0 +1,281 @@
+{
+  "info": {
+    "name": "SUS Smart Assistant API",
+    "description": "Collection para demonstração do SUS Smart Assistant — prontuário eletrônico unificado com assistente IA.\n\nFluxo de demo:\n1. Login\n2. Buscar paciente\n3. Ver prontuário\n4. Registrar atendimento\n5. Solicitar hipóteses IA\n6. Consultar resultado IA\n7. Métricas",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "token", "value": "" },
+    { "key": "pacienteId", "value": "" },
+    { "key": "solicitacaoId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Autenticação",
+      "item": [
+        {
+          "name": "Login como Médico",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set('token', jsonData.token);",
+                  "pm.test('Login bem-sucedido', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(jsonData.token).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"medico1\",\n  \"senha\": \"senha123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "login"] }
+          }
+        },
+        {
+          "name": "Login como Paciente",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"paciente1\",\n  \"senha\": \"senha123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "login"] }
+          }
+        },
+        {
+          "name": "Login como Gestor",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"gestor1\",\n  \"senha\": \"senha123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "login"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Buscar Paciente",
+      "item": [
+        {
+          "name": "Buscar Maria Silva por CPF",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) { pm.collectionVariables.set('pacienteId', jsonData.id); }",
+                  "pm.test('Paciente encontrado', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pacientes?cpf=52998224725",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "pacientes"],
+              "query": [{ "key": "cpf", "value": "52998224725" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Prontuário",
+      "item": [
+        {
+          "name": "Ver Prontuário Completo",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/prontuarios/{{pacienteId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "prontuarios", "{{pacienteId}}"] }
+          }
+        },
+        {
+          "name": "Listar Alergias",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/pacientes/{{pacienteId}}/alergias", "host": ["{{baseUrl}}"], "path": ["api", "v1", "pacientes", "{{pacienteId}}", "alergias"] }
+          }
+        },
+        {
+          "name": "Listar Medicamentos Ativos",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/pacientes/{{pacienteId}}/medicamentos", "host": ["{{baseUrl}}"], "path": ["api", "v1", "pacientes", "{{pacienteId}}", "medicamentos"] }
+          }
+        },
+        {
+          "name": "Listar Atendimentos",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/prontuarios/{{pacienteId}}/atendimentos", "host": ["{{baseUrl}}"], "path": ["api", "v1", "prontuarios", "{{pacienteId}}", "atendimentos"] }
+          }
+        },
+        {
+          "name": "Listar Exames",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/prontuarios/{{pacienteId}}/exames", "host": ["{{baseUrl}}"], "path": ["api", "v1", "prontuarios", "{{pacienteId}}", "exames"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Registrar Atendimento",
+      "item": [
+        {
+          "name": "Novo Atendimento",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": \"2024-11-15\",\n  \"queixaPrincipal\": \"Dor de garganta e febre há 3 dias\",\n  \"anamnese\": \"Paciente refere odinofagia intensa com febre de 38.5°C. Nega dispneia.\",\n  \"diagnosticoCid\": \"J06\",\n  \"prescricoes\": \"Azitromicina 500mg 1x/dia por 3 dias\",\n  \"observacoes\": \"ATENÇÃO: Paciente alérgica a Penicilina (CRÍTICA). Reincidência de IVAS.\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/prontuarios/{{pacienteId}}/atendimentos", "host": ["{{baseUrl}}"], "path": ["api", "v1", "prontuarios", "{{pacienteId}}", "atendimentos"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Assistente IA",
+      "item": [
+        {
+          "name": "Solicitar Hipóteses Diagnósticas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) { pm.collectionVariables.set('solicitacaoId', jsonData.id); }",
+                  "pm.test('Solicitação aceita (202)', function () {",
+                  "    pm.response.to.have.status(202);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pacienteId\": \"{{pacienteId}}\",\n  \"sintomas\": [\"dor de garganta\", \"febre\", \"tosse produtiva\", \"congestão nasal\"]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/assistente/solicitacoes", "host": ["{{baseUrl}}"], "path": ["api", "v1", "assistente", "solicitacoes"] }
+          }
+        },
+        {
+          "name": "Consultar Resultado IA",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/assistente/solicitacoes/{{solicitacaoId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "assistente", "solicitacoes", "{{solicitacaoId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Métricas (Gestor)",
+      "description": "Use o token do gestor1 para estas requisições",
+      "item": [
+        {
+          "name": "Métricas de Atendimento",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/metricas/atendimentos?inicio=2023-01-01&fim=2024-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "metricas", "atendimentos"],
+              "query": [
+                { "key": "inicio", "value": "2023-01-01" },
+                { "key": "fim", "value": "2024-12-31" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Diagnósticos Frequentes",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/metricas/diagnosticos?inicio=2023-01-01&fim=2024-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "metricas", "diagnosticos"],
+              "query": [
+                { "key": "inicio", "value": "2023-01-01" },
+                { "key": "fim", "value": "2024-12-31" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Métricas do Assistente IA",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/metricas/assistente?inicio=2023-01-01&fim=2024-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "metricas", "assistente"],
+              "query": [
+                { "key": "inicio", "value": "2023-01-01" },
+                { "key": "fim", "value": "2024-12-31" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Paciente - Meu Prontuário",
+      "description": "Use o token do paciente1 para esta requisição",
+      "item": [
+        {
+          "name": "Ver Meu Prontuário",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/meu-prontuario", "host": ["{{baseUrl}}"], "path": ["api", "v1", "meu-prontuario"] }
+          }
+        }
+      ]
+    }
+  ]
+}

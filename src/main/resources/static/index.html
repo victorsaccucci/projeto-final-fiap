@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SUS Smart Assistant — Login</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="login-wrapper">
+    <div class="login-card">
+      <h1>🏥 SUS Smart Assistant</h1>
+      <p class="subtitle">Prontuário Eletrônico Inteligente</p>
+
+      <div id="alert" class="alert"></div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="username">Usuário</label>
+          <input type="text" id="username" placeholder="Ex: medico1" required autofocus>
+        </div>
+        <div class="form-group">
+          <label for="password">Senha</label>
+          <input type="password" id="password" placeholder="Senha" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Entrar</button>
+      </form>
+
+      <div class="demo-hint" style="margin-top:1.2rem;">
+        <strong>Demo:</strong> medico1 / senha123 (Profissional) · paciente1 / senha123 (Paciente) · gestor1 / senha123 (Gestor)
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    // If already logged in, redirect based on role
+    if (getToken()) {
+      window.location.href = getHomePageForRole(getUserRole());
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert('alert');
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (!username || !password) {
+        showAlert('alert', 'Preencha todos os campos.', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch(API_BASE + '/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, senha: password })
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          showAlert('alert', err.mensagem || 'Credenciais inválidas.', 'error');
+          return;
+        }
+
+        const data = await res.json();
+        setToken(data.token);
+        const claims = decodeToken(data.token);
+        setUser({ username: data.username, role: data.role, referenciaId: claims.referenciaId || null, userId: claims.userId || null });
+        window.location.href = getHomePageForRole(data.role);
+      } catch (err) {
+        showAlert('alert', 'Erro de conexão com o servidor.', 'error');
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SUS Smart Assistant — Prontuário</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="navbar" id="navbar"></header>
+
+  <div class="container">
+    <div id="alert" class="alert"></div>
+
+    <!-- Search (PROFISSIONAL only) -->
+    <div class="card" id="searchSection">
+      <h2>🔍 Buscar Paciente</h2>
+      <div class="search-bar">
+        <input type="text" id="cpfInput" placeholder="Digite o CPF (somente números)" maxlength="11">
+        <button class="btn btn-primary" onclick="buscarPaciente()">Buscar</button>
+      </div>
+      <div class="demo-hint">
+        <strong>CPFs demo:</strong> 52998224725 (Maria Silva — histórico extenso) · 11144477735 (João Santos — poucos dados) · 98765432100 (Ana Costa — alergias)
+      </div>
+    </div>
+
+    <!-- Patient data (hidden until search or auto-loaded for PACIENTE) -->
+    <div id="patientSection" style="display:none;">
+      <div class="card">
+        <h2>👤 Dados do Paciente</h2>
+        <div class="patient-grid" id="patientInfo"></div>
+      </div>
+      <div class="card">
+        <h2>⚠️ Alergias</h2>
+        <div id="alergiasContent"></div>
+      </div>
+      <div class="card">
+        <h2>💊 Medicamentos Ativos</h2>
+        <div id="medicamentosContent"></div>
+      </div>
+      <div class="card">
+        <h2>📋 Atendimentos Recentes</h2>
+        <div id="atendimentosContent"></div>
+      </div>
+      <div class="card">
+        <h2>🔬 Exames Recentes</h2>
+        <div id="examesContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    if (!requireAuth()) throw new Error('redirect');
+
+    const role = getUserRole();
+
+    // GESTOR should go to metricas page
+    if (role === 'GESTOR') {
+      window.location.href = 'metricas.html';
+      throw new Error('redirect');
+    }
+
+    renderNavbar('dashboard');
+
+    let currentPaciente = null;
+
+    // PACIENTE: hide search, auto-load own prontuário
+    if (role === 'PACIENTE') {
+      document.getElementById('searchSection').style.display = 'none';
+      carregarMeuProntuario();
+    }
+
+    async function carregarMeuProntuario() {
+      try {
+        const prontuario = await apiGet('/meu-prontuario');
+        // Render patient info from prontuário data
+        document.getElementById('patientInfo').innerHTML = `
+          <div class="field"><label>Prontuário</label><p>${prontuario.prontuarioId}</p></div>
+          <div class="field"><label>Paciente ID</label><p>${prontuario.pacienteId}</p></div>
+          <div class="field"><label>Criado em</label><p>${formatDateTime(prontuario.criadoEm)}</p></div>
+        `;
+        renderAlergias(prontuario.alergias || []);
+        renderMedicamentos(prontuario.medicamentosAtivos || []);
+        renderAtendimentos(prontuario.atendimentos || []);
+        renderExames(prontuario.exames || []);
+        document.getElementById('patientSection').style.display = 'block';
+      } catch (err) {
+        showAlert('alert', err.message || 'Erro ao carregar prontuário.', 'error');
+      }
+    }
+
+    async function buscarPaciente() {
+      hideAlert('alert');
+      const cpf = document.getElementById('cpfInput').value.trim().replace(/\D/g, '');
+      if (!cpf || cpf.length !== 11) {
+        showAlert('alert', 'Informe um CPF válido com 11 dígitos.', 'error');
+        return;
+      }
+      try {
+        currentPaciente = await apiGet('/pacientes?cpf=' + cpf);
+        renderPatientInfo(currentPaciente);
+        const alergias = await apiGet('/pacientes/' + currentPaciente.id + '/alergias');
+        renderAlergias(alergias);
+        const meds = await apiGet('/pacientes/' + currentPaciente.id + '/medicamentos');
+        renderMedicamentos(meds);
+        try {
+          const prontuario = await apiGet('/prontuarios/' + currentPaciente.id);
+          renderAtendimentos(prontuario.atendimentos || []);
+          renderExames(prontuario.exames || []);
+        } catch {
+          renderAtendimentos([]);
+          renderExames([]);
+        }
+        document.getElementById('patientSection').style.display = 'block';
+      } catch (err) {
+        document.getElementById('patientSection').style.display = 'none';
+        showAlert('alert', err.message || 'Paciente não encontrado.', 'error');
+      }
+    }
+
+    function renderPatientInfo(p) {
+      document.getElementById('patientInfo').innerHTML = `
+        <div class="field"><label>Nome</label><p>${p.nome}</p></div>
+        <div class="field"><label>CPF</label><p>${p.cpf}</p></div>
+        <div class="field"><label>Data Nascimento</label><p>${formatDate(p.dataNascimento)} (${p.idade} anos)</p></div>
+        <div class="field"><label>Sexo</label><p>${p.sexo}</p></div>
+        <div class="field"><label>CNS</label><p>${p.cns || '—'}</p></div>
+        <div class="field"><label>Contato</label><p>${p.contato || '—'}</p></div>
+      `;
+    }
+
+    function renderAlergias(list) {
+      if (!list.length) {
+        document.getElementById('alergiasContent').innerHTML = '<p style="color:var(--text-light)">Nenhuma alergia registrada.</p>';
+        return;
+      }
+      let html = '<table><thead><tr><th>Substância</th><th>Gravidade</th><th>Reação</th><th>Data</th></tr></thead><tbody>';
+      list.forEach(a => {
+        html += `<tr>
+          <td>${a.substancia}</td>
+          <td>${gravidadeBadge(a.gravidade)}</td>
+          <td>${a.reacaoObservada || '—'}</td>
+          <td>${formatDateTime(a.registradoEm)}</td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      document.getElementById('alergiasContent').innerHTML = html;
+    }
+
+    function renderMedicamentos(list) {
+      if (!list.length) {
+        document.getElementById('medicamentosContent').innerHTML = '<p style="color:var(--text-light)">Nenhum medicamento ativo.</p>';
+        return;
+      }
+      let html = '<table><thead><tr><th>Nome</th><th>Dosagem</th><th>Frequência</th><th>Início</th></tr></thead><tbody>';
+      list.forEach(m => {
+        html += `<tr>
+          <td>${m.nome}</td>
+          <td>${m.dosagem}</td>
+          <td>${m.frequencia}</td>
+          <td>${formatDate(m.dataInicio)}</td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      document.getElementById('medicamentosContent').innerHTML = html;
+    }
+
+    function renderAtendimentos(list) {
+      if (!list.length) {
+        document.getElementById('atendimentosContent').innerHTML = '<p style="color:var(--text-light)">Nenhum atendimento registrado.</p>';
+        return;
+      }
+      let html = '<table><thead><tr><th>Data</th><th>CID</th><th>Queixa</th><th>Prescrições</th></tr></thead><tbody>';
+      list.slice(0, 10).forEach(a => {
+        html += `<tr>
+          <td>${formatDate(a.data)}</td>
+          <td><strong>${a.diagnosticoCid || '—'}</strong></td>
+          <td>${a.queixaPrincipal || '—'}</td>
+          <td>${a.prescricoes || '—'}</td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      document.getElementById('atendimentosContent').innerHTML = html;
+    }
+
+    function renderExames(list) {
+      if (!list.length) {
+        document.getElementById('examesContent').innerHTML = '<p style="color:var(--text-light)">Nenhum exame registrado.</p>';
+        return;
+      }
+      let html = '<table><thead><tr><th>Tipo</th><th>Data</th><th>Resultado</th></tr></thead><tbody>';
+      list.slice(0, 10).forEach(e => {
+        html += `<tr>
+          <td>${e.tipo}</td>
+          <td>${formatDate(e.dataRealizacao)}</td>
+          <td>${e.resultado || '—'}</td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      document.getElementById('examesContent').innerHTML = html;
+    }
+
+    // Allow Enter key to trigger search
+    const cpfEl = document.getElementById('cpfInput');
+    if (cpfEl) {
+      cpfEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') buscarPaciente();
+      });
+    }
+  </script>
+</body>
+</html>

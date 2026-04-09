@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SUS Smart Assistant — Assistente IA</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="navbar" id="navbar"></header>
+
+  <div class="container">
+    <div id="alert" class="alert"></div>
+
+    <!-- Patient selector -->
+    <div class="card">
+      <h2>🔍 Selecionar Paciente</h2>
+      <div class="search-bar">
+        <input type="text" id="cpfInput" placeholder="CPF do paciente (somente números)" maxlength="11">
+        <button class="btn btn-primary" onclick="selecionarPaciente()">Buscar</button>
+      </div>
+      <div class="demo-hint">
+        <strong>CPFs demo:</strong> 52998224725 (Maria — histórico extenso) · 11144477735 (João — poucos dados) · 98765432100 (Ana — alergias)
+      </div>
+      <div id="selectedPatient" style="display:none; margin-top:.75rem;">
+        <div class="patient-grid" id="patientInfo"></div>
+      </div>
+    </div>
+
+    <!-- Symptoms input -->
+    <div id="symptomsSection" style="display:none;">
+      <div class="card">
+        <h2>🩺 Informar Sintomas</h2>
+        <div class="form-group">
+          <label for="sintomas">Descreva os sintomas do paciente (um por linha ou separados por vírgula)</label>
+          <textarea id="sintomas" rows="4" placeholder="Ex: dor de cabeça intensa, febre alta, náusea"></textarea>
+        </div>
+        <button class="btn btn-accent" id="btnSolicitar" onclick="solicitarHipoteses()">
+          🤖 Solicitar Hipóteses Diagnósticas
+        </button>
+      </div>
+
+      <!-- Loading spinner -->
+      <div class="spinner" id="spinner">
+        <p style="margin-bottom:.75rem; color:var(--text-light);">Processando com IA... Isso pode levar alguns segundos.</p>
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      </div>
+
+      <!-- Results -->
+      <div id="resultsSection" style="display:none;">
+        <div class="card">
+          <h2>📊 Hipóteses Diagnósticas</h2>
+          <div id="statusInfo" style="margin-bottom:.75rem;"></div>
+          <div id="hipotesesList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    if (!requireAuth()) throw new Error('redirect');
+    if (!requireRole(['PROFISSIONAL'])) throw new Error('redirect');
+    renderNavbar('assistente');
+
+    let currentPaciente = null;
+    let pollingTimer = null;
+
+    async function selecionarPaciente() {
+      hideAlert('alert');
+      const cpf = document.getElementById('cpfInput').value.trim().replace(/\D/g, '');
+      if (!cpf || cpf.length !== 11) {
+        showAlert('alert', 'Informe um CPF válido com 11 dígitos.', 'error');
+        return;
+      }
+
+      try {
+        currentPaciente = await apiGet('/pacientes?cpf=' + cpf);
+        document.getElementById('patientInfo').innerHTML = `
+          <div class="field"><label>Nome</label><p>${currentPaciente.nome}</p></div>
+          <div class="field"><label>CPF</label><p>${currentPaciente.cpf}</p></div>
+          <div class="field"><label>Sexo</label><p>${currentPaciente.sexo}</p></div>
+          <div class="field"><label>Nascimento</label><p>${formatDate(currentPaciente.dataNascimento)}</p></div>
+        `;
+        document.getElementById('selectedPatient').style.display = 'block';
+        document.getElementById('symptomsSection').style.display = 'block';
+        document.getElementById('resultsSection').style.display = 'none';
+        document.getElementById('spinner').className = 'spinner';
+      } catch (err) {
+        currentPaciente = null;
+        document.getElementById('selectedPatient').style.display = 'none';
+        document.getElementById('symptomsSection').style.display = 'none';
+        showAlert('alert', err.message || 'Paciente não encontrado.', 'error');
+      }
+    }
+
+    async function solicitarHipoteses() {
+      hideAlert('alert');
+      if (!currentPaciente) {
+        showAlert('alert', 'Selecione um paciente primeiro.', 'error');
+        return;
+      }
+
+      const raw = document.getElementById('sintomas').value.trim();
+      if (!raw) {
+        showAlert('alert', 'Informe pelo menos um sintoma.', 'error');
+        return;
+      }
+
+      // Parse symptoms: split by newline or comma
+      const sintomas = raw.split(/[,\n]+/).map(s => s.trim()).filter(s => s.length > 0);
+      if (!sintomas.length) {
+        showAlert('alert', 'Informe pelo menos um sintoma válido.', 'error');
+        return;
+      }
+
+      // Get user info for profissionalId (from JWT claims)
+      const user = getUser();
+      const profissionalId = (user && user.referenciaId) ? user.referenciaId : null;
+
+      // Disable button, show spinner
+      document.getElementById('btnSolicitar').disabled = true;
+      document.getElementById('spinner').className = 'spinner show';
+      document.getElementById('resultsSection').style.display = 'none';
+
+      if (!profissionalId) {
+        showAlert('alert', 'Usuário não possui vínculo profissional. Faça login como profissional.', 'error');
+        document.getElementById('btnSolicitar').disabled = false;
+        document.getElementById('spinner').className = 'spinner';
+        return;
+      }
+
+      try {
+        const res = await apiPost('/assistente/solicitacoes', {
+          pacienteId: currentPaciente.id,
+          profissionalId: profissionalId,
+          sintomas: sintomas
+        });
+
+        if (res.status === 202 || res.status === 200) {
+          const data = await res.json();
+          const solicitacaoId = data.solicitacaoId;
+          // Start polling
+          pollResult(solicitacaoId);
+        } else {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.mensagem || 'Erro ao solicitar hipóteses.');
+        }
+      } catch (err) {
+        document.getElementById('spinner').className = 'spinner';
+        document.getElementById('btnSolicitar').disabled = false;
+        showAlert('alert', err.message || 'Erro ao solicitar hipóteses.', 'error');
+      }
+    }
+
+    function pollResult(id) {
+      if (pollingTimer) clearInterval(pollingTimer);
+
+      pollingTimer = setInterval(async () => {
+        try {
+          const result = await apiGet('/assistente/solicitacoes/' + id);
+
+          if (result.status === 'CONCLUIDA' || result.status === 'ERRO') {
+            clearInterval(pollingTimer);
+            pollingTimer = null;
+            document.getElementById('spinner').className = 'spinner';
+            document.getElementById('btnSolicitar').disabled = false;
+            renderResults(result);
+          }
+          // PENDENTE or PROCESSANDO — keep polling
+        } catch (err) {
+          clearInterval(pollingTimer);
+          pollingTimer = null;
+          document.getElementById('spinner').className = 'spinner';
+          document.getElementById('btnSolicitar').disabled = false;
+          showAlert('alert', 'Erro ao consultar resultado.', 'error');
+        }
+      }, 3000);
+    }
+
+    function renderResults(result) {
+      document.getElementById('resultsSection').style.display = 'block';
+
+      if (result.status === 'ERRO') {
+        document.getElementById('statusInfo').innerHTML =
+          '<div class="alert show alert-error">A solicitação retornou com erro. O serviço de IA pode estar indisponível.</div>';
+        document.getElementById('hipotesesList').innerHTML = '';
+        return;
+      }
+
+      document.getElementById('statusInfo').innerHTML =
+        `<p style="color:var(--text-light); font-size:.85rem;">Concluída em ${formatDateTime(result.concluidoEm)} · ${result.hipoteses.length} hipótese(s)</p>`;
+
+      if (!result.hipoteses || !result.hipoteses.length) {
+        document.getElementById('hipotesesList').innerHTML = '<p style="color:var(--text-light)">Nenhuma hipótese gerada.</p>';
+        return;
+      }
+
+      let html = '';
+      result.hipoteses.forEach((h, i) => {
+        const level = (h.confianca || '').toLowerCase();
+        html += `<div class="hipotese ${level}">
+          <div class="hipotese-header">
+            <span class="cid">${h.codigoCid}</span>
+            ${confiancaBadge(h.confianca)}
+            ${h.reincidencia ? '<span class="badge badge-reincidencia">⟳ Reincidência</span>' : ''}
+            ${h.alertaContraindicacao ? '<span class="badge badge-contraindicacao">⚠ Contraindicação</span>' : ''}
+          </div>
+          <p>${h.justificativa}</p>
+          ${h.alertaContraindicacao ? `<p style="color:var(--danger); margin-top:.4rem; font-size:.85rem;"><strong>⚠ Alerta:</strong> ${h.alertaContraindicacao}</p>` : ''}
+        </div>`;
+      });
+      document.getElementById('hipotesesList').innerHTML = html;
+    }
+
+    // Allow Enter key on CPF input
+    document.getElementById('cpfInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') selecionarPaciente();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SUS Smart Assistant — Métricas</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="navbar" id="navbar"></header>
+
+  <div class="container">
+    <div id="alert" class="alert"></div>
+
+    <div class="card">
+      <h2>📊 Métricas de Atendimentos</h2>
+      <div id="metricasAtendimento">
+        <p style="color:var(--text-light)">Carregando...</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🏥 Diagnósticos Mais Frequentes</h2>
+      <div id="diagnosticosFrequentes">
+        <p style="color:var(--text-light)">Carregando...</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🤖 Métricas do Assistente IA</h2>
+      <div id="metricasAssistente">
+        <p style="color:var(--text-light)">Carregando...</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    if (!requireAuth()) throw new Error('redirect');
+    if (!requireRole(['GESTOR'])) throw new Error('redirect');
+    renderNavbar('metricas');
+
+    carregarMetricas();
+
+    async function carregarMetricas() {
+      try {
+        const [atendimentos, diagnosticos, assistente] = await Promise.all([
+          apiGet('/metricas/atendimentos'),
+          apiGet('/metricas/diagnosticos'),
+          apiGet('/metricas/assistente')
+        ]);
+        renderMetricasAtendimento(atendimentos);
+        renderDiagnosticos(diagnosticos);
+        renderMetricasAssistente(assistente);
+      } catch (err) {
+        showAlert('alert', err.message || 'Erro ao carregar métricas.', 'error');
+      }
+    }
+
+    function renderMetricasAtendimento(data) {
+      document.getElementById('metricasAtendimento').innerHTML = `
+        <div class="patient-grid">
+          <div class="field"><label>Total de Atendimentos</label><p style="font-size:1.5rem; font-weight:700; color:var(--primary);">${data.totalAtendimentos}</p></div>
+          <div class="field"><label>Período</label><p>${data.inicio ? formatDate(data.inicio) + ' — ' + formatDate(data.fim) : 'Todos os períodos'}</p></div>
+        </div>
+      `;
+    }
+
+    function renderDiagnosticos(list) {
+      if (!list || !list.length) {
+        document.getElementById('diagnosticosFrequentes').innerHTML = '<p style="color:var(--text-light)">Nenhum diagnóstico registrado.</p>';
+        return;
+      }
+      let html = '<table><thead><tr><th>CID</th><th>Descrição</th><th>Quantidade</th></tr></thead><tbody>';
+      list.forEach(d => {
+        html += `<tr><td><strong>${d.cid}</strong></td><td>${d.descricao || '—'}</td><td>${d.count}</td></tr>`;
+      });
+      html += '</tbody></table>';
+      document.getElementById('diagnosticosFrequentes').innerHTML = html;
+    }
+
+    function renderMetricasAssistente(data) {
+      document.getElementById('metricasAssistente').innerHTML = `
+        <div class="patient-grid">
+          <div class="field"><label>Total de Solicitações</label><p style="font-size:1.5rem; font-weight:700; color:var(--accent);">${data.totalSolicitacoes}</p></div>
+          <div class="field"><label>Concluídas</label><p style="font-size:1.2rem; color:var(--success);">${data.totalConcluidas}</p></div>
+          <div class="field"><label>Com Erro</label><p style="font-size:1.2rem; color:var(--danger);">${data.totalErros}</p></div>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
