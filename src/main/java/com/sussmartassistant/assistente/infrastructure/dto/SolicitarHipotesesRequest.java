@@ -10,7 +10,6 @@ public record SolicitarHipotesesRequest(
         @NotNull(message = "pacienteId é obrigatório")
         UUID pacienteId,
 
-        @NotNull(message = "profissionalId é obrigatório")
         UUID profissionalId,
 
         @NotEmpty(message = "sintomas não pode ser vazio")

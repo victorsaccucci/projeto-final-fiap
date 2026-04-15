@@ -36,6 +36,17 @@ public class ConsultarProntuarioCompletoUseCase {
         Prontuario prontuario = prontuarioRepository.buscarPorPacienteId(pacienteId)
                 .orElseThrow(() -> new ResourceNotFoundException("Prontuário não encontrado para paciente: " + pacienteId));
 
+        return montarCompleto(pacienteId, prontuario);
+    }
+
+    public ProntuarioCompleto executarOuVazio(UUID pacienteId) {
+        Prontuario prontuario = prontuarioRepository.buscarPorPacienteId(pacienteId)
+                .orElse(Prontuario.criar(pacienteId));
+
+        return montarCompleto(pacienteId, prontuario);
+    }
+
+    private ProntuarioCompleto montarCompleto(UUID pacienteId, Prontuario prontuario) {
         List<Alergia> alergias = alergiaRepository.buscarPorPacienteId(pacienteId);
         List<MedicamentoEmUso> medicamentos = medicamentoRepository.buscarAtivosPorPacienteId(pacienteId);
         List<RegistroAtendimento> atendimentos = atendimentoRepository

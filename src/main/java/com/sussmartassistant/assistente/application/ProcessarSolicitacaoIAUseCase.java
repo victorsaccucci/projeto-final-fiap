@@ -53,7 +53,7 @@ public class ProcessarSolicitacaoIAUseCase {
         solicitacaoRepository.salvar(solicitacao);
 
         try {
-            ProntuarioCompleto prontuario = consultarProntuario.executar(solicitacao.getPacienteId());
+            ProntuarioCompleto prontuario = consultarProntuario.executarOuVazio(solicitacao.getPacienteId());
 
             List<String> sintomas = Arrays.asList(solicitacao.getSintomasInformados().split(";\\s*"));
             String prompt = promptBuilder.construirPrompt(prontuario, sintomas);

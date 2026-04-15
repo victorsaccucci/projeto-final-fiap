@@ -96,6 +96,11 @@ async function apiPost(path, body) {
   return res;
 }
 
+async function apiPatch(path, body) {
+  const res = await apiFetch(path, { method: 'PATCH', body: JSON.stringify(body) });
+  return res;
+}
+
 // ── UI helpers ──
 function showAlert(id, msg, type) {
   const el = document.getElementById(id);

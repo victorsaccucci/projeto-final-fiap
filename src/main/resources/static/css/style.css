@@ -138,6 +138,20 @@ body {
 .btn-primary:hover { background: var(--primary-light); }
 .btn-accent { background: var(--accent); color: #fff; }
 .btn-accent:hover { background: var(--accent-light); }
+.btn-secondary { background: #fff; color: var(--primary); border: 1px solid var(--primary); }
+.btn-secondary:hover { background: #e3f2fd; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:hover { background: var(--danger-light); }
+.btn-sm { padding: .3rem .7rem; font-size: .8rem; }
+
+/* COLLAPSIBLE FORM */
+.form-toggle { cursor: pointer; user-select: none; }
+.form-toggle::after { content: ' ▼'; font-size: .75rem; }
+.form-toggle.open::after { content: ' ▲'; }
+.collapsible { display: none; margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+.collapsible.open { display: block; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+@media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
 
 /* ALERTS */
 .alert {

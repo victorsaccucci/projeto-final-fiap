@@ -42,7 +42,7 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/**").permitAll()
 
                 // Paciente: own prontuario only
-                .requestMatchers("/api/v1/meu-prontuario").hasRole("PACIENTE")
+                .requestMatchers("/api/v1/meu-prontuario", "/api/v1/meu-prontuario/**").hasRole("PACIENTE")
 
                 // Métricas: gestor only
                 .requestMatchers("/api/v1/metricas/**").hasRole("GESTOR")

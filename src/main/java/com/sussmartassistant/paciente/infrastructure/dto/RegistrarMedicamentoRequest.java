@@ -25,7 +25,6 @@ public record RegistrarMedicamentoRequest(
         @Schema(description = "Data de início do uso", example = "2024-01-15")
         LocalDate dataInicio,
 
-        @NotNull(message = "ID do profissional é obrigatório")
-        @Schema(description = "ID do profissional que registrou")
+        @Schema(description = "ID do profissional que registrou (opcional, usa o do token JWT)")
         UUID registradoPorId
 ) {}

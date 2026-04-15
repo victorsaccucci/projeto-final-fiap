@@ -485,11 +485,13 @@ public class DataLoader implements CommandLineRunner {
         // medico1 — linked to Dr. Carlos Eduardo Mendes
         salvarUsuario("medico1", senhaHash, Role.PROFISSIONAL, profissionais.get(0).getId());
 
-        // paciente1 — linked to Maria Silva
-        salvarUsuario("paciente1", senhaHash, Role.PACIENTE, pacientes.get(0).getId());
-
         // gestor1
         salvarUsuario("gestor1", senhaHash, Role.GESTOR, null);
+
+        // pacientes — username é o CPF
+        for (int i = 0; i < pacientes.size(); i++) {
+            salvarUsuario(CPFS_VALIDOS[i], senhaHash, Role.PACIENTE, pacientes.get(i).getId());
+        }
     }
 
     // ==================== HELPER METHODS ====================

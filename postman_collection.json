@@ -8,9 +8,149 @@
     { "key": "baseUrl", "value": "http://localhost:8080" },
     { "key": "token", "value": "" },
     { "key": "pacienteId", "value": "" },
-    { "key": "solicitacaoId", "value": "" }
+    { "key": "solicitacaoId", "value": "" },
+    { "key": "medicamentoId", "value": "" }
   ],
   "item": [
+    {
+      "name": "0. Cadastros",
+      "item": [
+        {
+          "name": "Cadastrar Unidade de Saúde",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"UBS Vila Madalena\",\n  \"cnes\": \"1234567\",\n  \"endereco\": \"Rua Harmonia, 100 - Vila Madalena, São Paulo - SP\",\n  \"telefone\": \"(11) 3030-1234\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/unidades-saude", "host": ["{{baseUrl}}"], "path": ["api", "v1", "unidades-saude"] }
+          }
+        },
+        {
+          "name": "Listar Unidades de Saúde",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/unidades-saude", "host": ["{{baseUrl}}"], "path": ["api", "v1", "unidades-saude"] }
+          }
+        },
+        {
+          "name": "Cadastrar Profissional de Saúde",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Dr. Carlos Souza\",\n  \"crm\": \"CRM/SP 123456\",\n  \"especialidade\": \"Clínica Geral\",\n  \"username\": \"medico2\",\n  \"senha\": \"senha123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/profissionais", "host": ["{{baseUrl}}"], "path": ["api", "v1", "profissionais"] }
+          }
+        },
+        {
+          "name": "Cadastrar Paciente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) { pm.collectionVariables.set('pacienteId', jsonData.id); }",
+                  "pm.test('Paciente cadastrado', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    pm.expect(jsonData.id).to.exist;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"João da Silva\",\n  \"cpf\": \"71428793860\",\n  \"cns\": \"898001234560005\",\n  \"dataNascimento\": \"1985-03-22\",\n  \"sexo\": \"MASCULINO\",\n  \"telefone\": \"(11) 91234-5678\",\n  \"email\": \"joao.silva@email.com\",\n  \"endereco\": \"Rua das Flores, 42 - Jardim Paulista, São Paulo - SP\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/pacientes", "host": ["{{baseUrl}}"], "path": ["api", "v1", "pacientes"] }
+          }
+        },
+        {
+          "name": "Registrar Alergia",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"substancia\": \"Penicilina\",\n  \"reacao\": \"Anafilaxia\",\n  \"gravidade\": \"CRITICA\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/pacientes/{{pacienteId}}/alergias", "host": ["{{baseUrl}}"], "path": ["api", "v1", "pacientes", "{{pacienteId}}", "alergias"] }
+          }
+        },
+        {
+          "name": "Registrar Medicamento",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) { pm.collectionVariables.set('medicamentoId', jsonData.id); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Losartana Potássica\",\n  \"dosagem\": \"50mg\",\n  \"frequencia\": \"1x ao dia\",\n  \"dataInicio\": \"2024-01-10\",\n  \"prescritoPor\": \"Dr. Carlos Souza - CRM/SP 123456\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/pacientes/{{pacienteId}}/medicamentos", "host": ["{{baseUrl}}"], "path": ["api", "v1", "pacientes", "{{pacienteId}}", "medicamentos"] }
+          }
+        },
+        {
+          "name": "Descontinuar Medicamento",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/pacientes/{{pacienteId}}/medicamentos/{{medicamentoId}}/descontinuar", "host": ["{{baseUrl}}"], "path": ["api", "v1", "pacientes", "{{pacienteId}}", "medicamentos", "{{medicamentoId}}", "descontinuar"] }
+          }
+        },
+        {
+          "name": "Registrar Exame",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"Hemograma Completo\",\n  \"data\": \"2024-11-10\",\n  \"resultado\": \"Hemoglobina: 13.5 g/dL, Leucócitos: 8.200/mm³, Plaquetas: 220.000/mm³. Dentro dos limites normais.\",\n  \"laboratorio\": \"Laboratório Central SUS\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/prontuarios/{{pacienteId}}/exames", "host": ["{{baseUrl}}"], "path": ["api", "v1", "prontuarios", "{{pacienteId}}", "exames"] }
+          }
+        }
+      ]
+    },
     {
       "name": "1. Autenticação",
       "item": [
@@ -43,19 +183,51 @@
           }
         },
         {
-          "name": "Login como Paciente",
+          "name": "Login como Paciente (Maria Silva)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set('token', jsonData.token);",
+                  "pm.test('Login bem-sucedido', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(jsonData.token).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"paciente1\",\n  \"senha\": \"senha123\"\n}"
+              "raw": "{\n  \"username\": \"52998224725\",\n  \"senha\": \"senha123\"\n}"
             },
             "url": { "raw": "{{baseUrl}}/api/v1/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "login"] }
           }
         },
         {
           "name": "Login como Gestor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set('token', jsonData.token);",
+                  "pm.test('Login bem-sucedido', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(jsonData.token).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],

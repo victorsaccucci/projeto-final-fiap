@@ -20,7 +20,7 @@ public class PacienteRepositoryAdapter implements PacienteRepository {
     }
 
     @Override
-    @CachePut(value = "paciente", key = "#result.id()", condition = "#result != null")
+    @CachePut(value = "paciente", key = "#result.getId()", condition = "#result != null")
     public Paciente salvar(Paciente paciente) {
         PacienteEntity entity = PacienteEntity.fromDomain(paciente);
         return jpa.save(entity).toDomain();

@@ -5,6 +5,7 @@ import com.sussmartassistant.paciente.domain.Alergia;
 import com.sussmartassistant.paciente.domain.MedicamentoEmUso;
 import com.sussmartassistant.paciente.domain.Paciente;
 import com.sussmartassistant.paciente.infrastructure.dto.*;
+import com.sussmartassistant.seguranca.infrastructure.UsuarioAutenticado;
 import com.sussmartassistant.shared.domain.CNS;
 import com.sussmartassistant.shared.domain.CPF;
 import com.sussmartassistant.shared.infrastructure.ErrorResponse;
@@ -17,6 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -90,9 +92,11 @@ public class PacienteController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     public ResponseEntity<AlergiaResponse> registrarAlergia(
             @PathVariable UUID id,
-            @Valid @RequestBody RegistrarAlergiaRequest request) {
+            @Valid @RequestBody RegistrarAlergiaRequest request,
+            @AuthenticationPrincipal UsuarioAutenticado usuario) {
+        UUID registradoPor = request.registradoPorId() != null ? request.registradoPorId() : usuario.referenciaId();
         Alergia alergia = registrarAlergia.executar(
-                id, request.substancia(), request.gravidade(), request.reacaoObservada(), request.registradoPorId());
+                id, request.substancia(), request.gravidade(), request.reacaoObservada(), registradoPor);
         return ResponseEntity.status(HttpStatus.CREATED).body(AlergiaResponse.from(alergia));
     }
 
@@ -117,10 +121,12 @@ public class PacienteController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     public ResponseEntity<MedicamentoResponse> registrarMedicamento(
             @PathVariable UUID id,
-            @Valid @RequestBody RegistrarMedicamentoRequest request) {
+            @Valid @RequestBody RegistrarMedicamentoRequest request,
+            @AuthenticationPrincipal UsuarioAutenticado usuario) {
+        UUID registradoPor = request.registradoPorId() != null ? request.registradoPorId() : usuario.referenciaId();
         MedicamentoEmUso medicamento = registrarMedicamento.executar(
                 id, request.nome(), request.dosagem(), request.frequencia(),
-                request.dataInicio(), request.registradoPorId());
+                request.dataInicio(), registradoPor);
         return ResponseEntity.status(HttpStatus.CREATED).body(MedicamentoResponse.from(medicamento));
     }
 

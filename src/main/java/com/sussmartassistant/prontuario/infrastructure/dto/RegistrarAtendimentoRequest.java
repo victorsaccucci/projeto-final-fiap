@@ -9,8 +9,7 @@ import java.util.UUID;
 
 @Schema(description = "Dados para registro de atendimento")
 public record RegistrarAtendimentoRequest(
-        @NotNull(message = "ID do profissional é obrigatório")
-        @Schema(description = "ID do profissional de saúde", example = "550e8400-e29b-41d4-a716-446655440000")
+        @Schema(description = "ID do profissional de saúde (opcional, usa o do token JWT)")
         UUID profissionalId,
 
         @Schema(description = "ID da unidade de saúde")

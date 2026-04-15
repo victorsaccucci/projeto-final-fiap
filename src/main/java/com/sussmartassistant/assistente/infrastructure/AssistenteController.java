@@ -5,6 +5,7 @@ import com.sussmartassistant.assistente.application.SolicitarHipotesesDiagnostic
 import com.sussmartassistant.assistente.domain.SolicitacaoIA;
 import com.sussmartassistant.assistente.infrastructure.dto.SolicitacaoIAResponse;
 import com.sussmartassistant.assistente.infrastructure.dto.SolicitarHipotesesRequest;
+import com.sussmartassistant.seguranca.infrastructure.UsuarioAutenticado;
 import com.sussmartassistant.shared.infrastructure.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -14,6 +15,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,9 +43,12 @@ public class AssistenteController {
     @ApiResponse(responseCode = "202", description = "Solicitação aceita para processamento")
     @ApiResponse(responseCode = "400", description = "Dados inválidos",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    public ResponseEntity<Map<String, UUID>> solicitar(@Valid @RequestBody SolicitarHipotesesRequest request) {
+    public ResponseEntity<Map<String, UUID>> solicitar(
+            @Valid @RequestBody SolicitarHipotesesRequest request,
+            @AuthenticationPrincipal UsuarioAutenticado usuario) {
+        UUID profissionalId = request.profissionalId() != null ? request.profissionalId() : usuario.referenciaId();
         UUID solicitacaoId = solicitarHipoteses.executar(
-                request.pacienteId(), request.sintomas(), request.profissionalId());
+                request.pacienteId(), request.sintomas(), profissionalId);
         return ResponseEntity.status(HttpStatus.ACCEPTED)
                 .body(Map.of("solicitacaoId", solicitacaoId));
     }

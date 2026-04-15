@@ -12,6 +12,29 @@
   <div class="container">
     <div id="alert" class="alert"></div>
 
+    <!-- PROFISSIONAL: Cadastrar Paciente -->
+    <div class="card" id="cadastroSection" style="display:none;">
+      <h2 class="form-toggle" onclick="toggleForm('formCadastro', this)">➕ Cadastrar Novo Paciente</h2>
+      <div class="collapsible" id="formCadastro">
+        <div class="form-row">
+          <div class="form-group"><label>Nome completo *</label><input type="text" id="cad_nome"></div>
+          <div class="form-group"><label>CPF (11 dígitos) *</label><input type="text" id="cad_cpf" maxlength="11"></div>
+          <div class="form-group"><label>Data de Nascimento *</label><input type="date" id="cad_nascimento"></div>
+          <div class="form-group"><label>Sexo *</label>
+            <select id="cad_sexo">
+              <option value="">Selecione</option>
+              <option value="MASCULINO">Masculino</option>
+              <option value="FEMININO">Feminino</option>
+              <option value="OUTRO">Outro</option>
+            </select>
+          </div>
+          <div class="form-group"><label>CNS</label><input type="text" id="cad_cns" maxlength="15"></div>
+          <div class="form-group"><label>Contato (telefone/email)</label><input type="text" id="cad_contato"></div>
+        </div>
+        <button class="btn btn-primary" onclick="cadastrarPaciente()">Cadastrar Paciente</button>
+      </div>
+    </div>
+
     <!-- Search (PROFISSIONAL only) -->
     <div class="card" id="searchSection">
       <h2>🔍 Buscar Paciente</h2>
@@ -24,27 +47,89 @@
       </div>
     </div>
 
-    <!-- Patient data (hidden until search or auto-loaded for PACIENTE) -->
+    <!-- Patient data -->
     <div id="patientSection" style="display:none;">
       <div class="card">
         <h2>👤 Dados do Paciente</h2>
         <div class="patient-grid" id="patientInfo"></div>
       </div>
+
+      <!-- Alergias -->
       <div class="card">
         <h2>⚠️ Alergias</h2>
         <div id="alergiasContent"></div>
+        <div id="formAlergiaWrap" style="display:none; margin-top:1rem;">
+          <h3 class="form-toggle" onclick="toggleForm('formAlergia', this)" style="font-size:.95rem; color:var(--primary); cursor:pointer;">➕ Registrar Alergia</h3>
+          <div class="collapsible" id="formAlergia">
+            <div class="form-row">
+              <div class="form-group"><label>Substância *</label><input type="text" id="al_substancia"></div>
+              <div class="form-group"><label>Gravidade *</label>
+                <select id="al_gravidade">
+                  <option value="">Selecione</option>
+                  <option value="LEVE">Leve</option>
+                  <option value="MODERADA">Moderada</option>
+                  <option value="CRITICA">Crítica</option>
+                </select>
+              </div>
+              <div class="form-group" style="grid-column:1/-1"><label>Reação observada</label><input type="text" id="al_reacao"></div>
+            </div>
+            <button class="btn btn-primary" onclick="registrarAlergia()">Salvar Alergia</button>
+          </div>
+        </div>
       </div>
+
+      <!-- Medicamentos -->
       <div class="card">
         <h2>💊 Medicamentos Ativos</h2>
         <div id="medicamentosContent"></div>
+        <div id="formMedWrap" style="display:none; margin-top:1rem;">
+          <h3 class="form-toggle" onclick="toggleForm('formMed', this)" style="font-size:.95rem; color:var(--primary); cursor:pointer;">➕ Registrar Medicamento</h3>
+          <div class="collapsible" id="formMed">
+            <div class="form-row">
+              <div class="form-group"><label>Nome *</label><input type="text" id="med_nome"></div>
+              <div class="form-group"><label>Dosagem *</label><input type="text" id="med_dosagem" placeholder="Ex: 500mg"></div>
+              <div class="form-group"><label>Frequência *</label><input type="text" id="med_frequencia" placeholder="Ex: 8 em 8 horas"></div>
+              <div class="form-group"><label>Data de início *</label><input type="date" id="med_inicio"></div>
+            </div>
+            <button class="btn btn-primary" onclick="registrarMedicamento()">Salvar Medicamento</button>
+          </div>
+        </div>
       </div>
+
+      <!-- Atendimentos -->
       <div class="card">
-        <h2>📋 Atendimentos Recentes</h2>
+        <h2>📋 Atendimentos</h2>
         <div id="atendimentosContent"></div>
+        <div id="formAtendWrap" style="display:none; margin-top:1rem;">
+          <h3 class="form-toggle" onclick="toggleForm('formAtend', this)" style="font-size:.95rem; color:var(--primary); cursor:pointer;">➕ Registrar Atendimento</h3>
+          <div class="collapsible" id="formAtend">
+            <div class="form-row">
+              <div class="form-group"><label>Data *</label><input type="date" id="at_data"></div>
+              <div class="form-group"><label>CID (diagnóstico)</label><input type="text" id="at_cid" placeholder="Ex: J00, A90"></div>
+              <div class="form-group" style="grid-column:1/-1"><label>Queixa principal *</label><input type="text" id="at_queixa"></div>
+              <div class="form-group" style="grid-column:1/-1"><label>Prescrições</label><textarea id="at_prescricoes" rows="2"></textarea></div>
+              <div class="form-group" style="grid-column:1/-1"><label>Observações</label><textarea id="at_obs" rows="2"></textarea></div>
+            </div>
+            <button class="btn btn-primary" onclick="registrarAtendimento()">Salvar Atendimento</button>
+          </div>
+        </div>
       </div>
+
+      <!-- Exames -->
       <div class="card">
-        <h2>🔬 Exames Recentes</h2>
+        <h2>🔬 Exames</h2>
         <div id="examesContent"></div>
+        <div id="formExameWrap" style="display:none; margin-top:1rem;">
+          <h3 class="form-toggle" onclick="toggleForm('formExame', this)" style="font-size:.95rem; color:var(--primary); cursor:pointer;">➕ Registrar Exame</h3>
+          <div class="collapsible" id="formExame">
+            <div class="form-row">
+              <div class="form-group"><label>Tipo *</label><input type="text" id="ex_tipo" placeholder="Ex: Hemograma, Raio-X"></div>
+              <div class="form-group"><label>Data de realização *</label><input type="date" id="ex_data"></div>
+              <div class="form-group" style="grid-column:1/-1"><label>Resultado</label><textarea id="ex_resultado" rows="2"></textarea></div>
+            </div>
+            <button class="btn btn-primary" onclick="registrarExame()">Salvar Exame</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -54,42 +139,58 @@
     if (!requireAuth()) throw new Error('redirect');
 
     const role = getUserRole();
-
-    // GESTOR should go to metricas page
-    if (role === 'GESTOR') {
-      window.location.href = 'metricas.html';
-      throw new Error('redirect');
-    }
+    if (role === 'GESTOR') { window.location.href = 'metricas.html'; throw new Error('redirect'); }
 
     renderNavbar('dashboard');
 
     let currentPaciente = null;
 
-    // PACIENTE: hide search, auto-load own prontuário
+    if (role === 'PROFISSIONAL') {
+      document.getElementById('cadastroSection').style.display = 'block';
+    }
+
     if (role === 'PACIENTE') {
       document.getElementById('searchSection').style.display = 'none';
       carregarMeuProntuario();
     }
 
-    async function carregarMeuProntuario() {
+    // ── Toggle collapsible forms ──
+    function toggleForm(id, btn) {
+      const el = document.getElementById(id);
+      el.classList.toggle('open');
+      btn.classList.toggle('open');
+    }
+
+    // ── Cadastrar paciente ──
+    async function cadastrarPaciente() {
+      const nome = document.getElementById('cad_nome').value.trim();
+      const cpf = document.getElementById('cad_cpf').value.trim().replace(/\D/g, '');
+      const dataNascimento = document.getElementById('cad_nascimento').value;
+      const sexo = document.getElementById('cad_sexo').value;
+      const cns = document.getElementById('cad_cns').value.trim() || null;
+      const contato = document.getElementById('cad_contato').value.trim() || null;
+
+      if (!nome || !cpf || cpf.length !== 11 || !dataNascimento || !sexo) {
+        showAlert('alert', 'Preencha todos os campos obrigatórios (Nome, CPF, Nascimento, Sexo).', 'error');
+        return;
+      }
       try {
-        const prontuario = await apiGet('/meu-prontuario');
-        // Render patient info from prontuário data
-        document.getElementById('patientInfo').innerHTML = `
-          <div class="field"><label>Prontuário</label><p>${prontuario.prontuarioId}</p></div>
-          <div class="field"><label>Paciente ID</label><p>${prontuario.pacienteId}</p></div>
-          <div class="field"><label>Criado em</label><p>${formatDateTime(prontuario.criadoEm)}</p></div>
-        `;
-        renderAlergias(prontuario.alergias || []);
-        renderMedicamentos(prontuario.medicamentosAtivos || []);
-        renderAtendimentos(prontuario.atendimentos || []);
-        renderExames(prontuario.exames || []);
-        document.getElementById('patientSection').style.display = 'block';
+        const res = await apiPost('/pacientes', { nome, cpf, dataNascimento, sexo, cns, contato });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.mensagem || 'Erro ao cadastrar paciente.');
+        }
+        const p = await res.json();
+        showAlert('alert', `Paciente "${p.nome}" cadastrado com sucesso!`, 'success');
+        // limpa form
+        ['cad_nome','cad_cpf','cad_nascimento','cad_cns','cad_contato'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('cad_sexo').value = '';
       } catch (err) {
-        showAlert('alert', err.message || 'Erro ao carregar prontuário.', 'error');
+        showAlert('alert', err.message, 'error');
       }
     }
 
+    // ── Buscar paciente ──
     async function buscarPaciente() {
       hideAlert('alert');
       const cpf = document.getElementById('cpfInput').value.trim().replace(/\D/g, '');
@@ -100,25 +201,146 @@
       try {
         currentPaciente = await apiGet('/pacientes?cpf=' + cpf);
         renderPatientInfo(currentPaciente);
-        const alergias = await apiGet('/pacientes/' + currentPaciente.id + '/alergias');
-        renderAlergias(alergias);
-        const meds = await apiGet('/pacientes/' + currentPaciente.id + '/medicamentos');
-        renderMedicamentos(meds);
-        try {
-          const prontuario = await apiGet('/prontuarios/' + currentPaciente.id);
-          renderAtendimentos(prontuario.atendimentos || []);
-          renderExames(prontuario.exames || []);
-        } catch {
-          renderAtendimentos([]);
-          renderExames([]);
-        }
+        await recarregarDadosPaciente();
         document.getElementById('patientSection').style.display = 'block';
+        // mostra formulários de registro
+        ['formAlergiaWrap','formMedWrap','formAtendWrap','formExameWrap'].forEach(id => {
+          document.getElementById(id).style.display = 'block';
+        });
       } catch (err) {
         document.getElementById('patientSection').style.display = 'none';
         showAlert('alert', err.message || 'Paciente não encontrado.', 'error');
       }
     }
 
+    async function recarregarDadosPaciente() {
+      const [alergias, meds] = await Promise.all([
+        apiGet('/pacientes/' + currentPaciente.id + '/alergias'),
+        apiGet('/pacientes/' + currentPaciente.id + '/medicamentos')
+      ]);
+      renderAlergias(alergias);
+      renderMedicamentos(meds);
+      try {
+        const prontuario = await apiGet('/prontuarios/' + currentPaciente.id);
+        renderAtendimentos(prontuario.atendimentos || []);
+        renderExames(prontuario.exames || []);
+      } catch {
+        renderAtendimentos([]);
+        renderExames([]);
+      }
+    }
+
+    // ── Registrar alergia ──
+    async function registrarAlergia() {
+      const substancia = document.getElementById('al_substancia').value.trim();
+      const gravidade = document.getElementById('al_gravidade').value;
+      const reacaoObservada = document.getElementById('al_reacao').value.trim() || null;
+      const registradoPorId = getUser()?.referenciaId;
+      if (!substancia || !gravidade) {
+        showAlert('alert', 'Informe substância e gravidade.', 'error'); return;
+      }
+      if (!registradoPorId) {
+        showAlert('alert', 'Usuário sem vínculo profissional. Faça login como médico.', 'error'); return;
+      }
+      try {
+        const res = await apiPost('/pacientes/' + currentPaciente.id + '/alergias', { substancia, gravidade, reacaoObservada, registradoPorId });
+        if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.mensagem || 'Erro ao registrar alergia.'); }
+        showAlert('alert', 'Alergia registrada com sucesso!', 'success');
+        document.getElementById('al_substancia').value = '';
+        document.getElementById('al_gravidade').value = '';
+        document.getElementById('al_reacao').value = '';
+        const alergias = await apiGet('/pacientes/' + currentPaciente.id + '/alergias');
+        renderAlergias(alergias);
+      } catch (err) { showAlert('alert', err.message, 'error'); }
+    }
+
+    // ── Registrar medicamento ──
+    async function registrarMedicamento() {
+      const nome = document.getElementById('med_nome').value.trim();
+      const dosagem = document.getElementById('med_dosagem').value.trim();
+      const frequencia = document.getElementById('med_frequencia').value.trim();
+      const dataInicio = document.getElementById('med_inicio').value;
+      const registradoPorId = getUser()?.referenciaId;
+      if (!nome || !dosagem || !frequencia || !dataInicio) {
+        showAlert('alert', 'Preencha todos os campos do medicamento.', 'error'); return;
+      }
+      if (!registradoPorId) {
+        showAlert('alert', 'Usuário sem vínculo profissional. Faça login como médico.', 'error'); return;
+      }
+      try {
+        const res = await apiPost('/pacientes/' + currentPaciente.id + '/medicamentos', { nome, dosagem, frequencia, dataInicio, registradoPorId });
+        if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.mensagem || 'Erro ao registrar medicamento.'); }
+        showAlert('alert', 'Medicamento registrado com sucesso!', 'success');
+        ['med_nome','med_dosagem','med_frequencia','med_inicio'].forEach(id => document.getElementById(id).value = '');
+        const meds = await apiGet('/pacientes/' + currentPaciente.id + '/medicamentos');
+        renderMedicamentos(meds);
+      } catch (err) { showAlert('alert', err.message, 'error'); }
+    }
+
+    // ── Descontinuar medicamento ──
+    async function descontinuarMedicamento(medId) {
+      if (!confirm('Descontinuar este medicamento?')) return;
+      try {
+        const res = await apiPatch('/pacientes/' + currentPaciente.id + '/medicamentos/' + medId + '/descontinuar');
+        if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.mensagem || 'Erro ao descontinuar.'); }
+        showAlert('alert', 'Medicamento descontinuado.', 'success');
+        const meds = await apiGet('/pacientes/' + currentPaciente.id + '/medicamentos');
+        renderMedicamentos(meds);
+      } catch (err) { showAlert('alert', err.message, 'error'); }
+    }
+
+    // ── Registrar atendimento ──
+    async function registrarAtendimento() {
+      const data = document.getElementById('at_data').value;
+      const queixaPrincipal = document.getElementById('at_queixa').value.trim();
+      const diagnosticoCid = document.getElementById('at_cid').value.trim() || null;
+      const prescricoes = document.getElementById('at_prescricoes').value.trim() || null;
+      const observacoes = document.getElementById('at_obs').value.trim() || null;
+      const profissionalId = getUser()?.referenciaId;
+      if (!data || !queixaPrincipal) {
+        showAlert('alert', 'Informe data e queixa principal.', 'error'); return;
+      }
+      if (!profissionalId) {
+        showAlert('alert', 'Usuário sem vínculo profissional. Faça login como médico.', 'error'); return;
+      }
+      try {
+        const res = await apiPost('/prontuarios/' + currentPaciente.id + '/atendimentos', {
+          data, queixaPrincipal, diagnosticoCid, prescricoes, observacoes,
+          profissionalId, unidadeSaudeId: null
+        });
+        if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.mensagem || 'Erro ao registrar atendimento.'); }
+        showAlert('alert', 'Atendimento registrado com sucesso!', 'success');
+        ['at_data','at_cid','at_queixa','at_prescricoes','at_obs'].forEach(id => document.getElementById(id).value = '');
+        const prontuario = await apiGet('/prontuarios/' + currentPaciente.id);
+        renderAtendimentos(prontuario.atendimentos || []);
+      } catch (err) { showAlert('alert', err.message, 'error'); }
+    }
+
+    // ── Registrar exame ──
+    async function registrarExame() {
+      const tipo = document.getElementById('ex_tipo').value.trim();
+      const dataRealizacao = document.getElementById('ex_data').value;
+      const resultado = document.getElementById('ex_resultado').value.trim() || null;
+      const registradoPorId = getUser()?.referenciaId;
+      if (!tipo || !dataRealizacao) {
+        showAlert('alert', 'Informe tipo e data do exame.', 'error'); return;
+      }
+      if (!registradoPorId) {
+        showAlert('alert', 'Usuário sem vínculo profissional. Faça login como médico.', 'error'); return;
+      }
+      try {
+        const res = await apiPost('/prontuarios/' + currentPaciente.id + '/exames', {
+          tipo, dataRealizacao, resultado, registradoPorId, unidadeSaudeOrigemId: null
+        });
+        if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.mensagem || 'Erro ao registrar exame.'); }
+        showAlert('alert', 'Exame registrado com sucesso!', 'success');
+        ['ex_tipo','ex_data','ex_resultado'].forEach(id => document.getElementById(id).value = '');
+        const prontuario = await apiGet('/prontuarios/' + currentPaciente.id);
+        renderExames(prontuario.exames || []);
+      } catch (err) { showAlert('alert', err.message, 'error'); }
+    }
+
+    // ── Render helpers ──
     function renderPatientInfo(p) {
       document.getElementById('patientInfo').innerHTML = `
         <div class="field"><label>Nome</label><p>${p.nome}</p></div>
@@ -153,13 +375,17 @@
         document.getElementById('medicamentosContent').innerHTML = '<p style="color:var(--text-light)">Nenhum medicamento ativo.</p>';
         return;
       }
-      let html = '<table><thead><tr><th>Nome</th><th>Dosagem</th><th>Frequência</th><th>Início</th></tr></thead><tbody>';
+      let html = '<table><thead><tr><th>Nome</th><th>Dosagem</th><th>Frequência</th><th>Início</th><th></th></tr></thead><tbody>';
       list.forEach(m => {
+        const btnDesc = role === 'PROFISSIONAL'
+          ? `<button class="btn btn-danger btn-sm" onclick="descontinuarMedicamento('${m.id}')">Descontinuar</button>`
+          : '';
         html += `<tr>
           <td>${m.nome}</td>
           <td>${m.dosagem}</td>
           <td>${m.frequencia}</td>
           <td>${formatDate(m.dataInicio)}</td>
+          <td>${btnDesc}</td>
         </tr>`;
       });
       html += '</tbody></table>';
@@ -201,13 +427,26 @@
       document.getElementById('examesContent').innerHTML = html;
     }
 
-    // Allow Enter key to trigger search
-    const cpfEl = document.getElementById('cpfInput');
-    if (cpfEl) {
-      cpfEl.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') buscarPaciente();
-      });
+    async function carregarMeuProntuario() {
+      try {
+        const prontuario = await apiGet('/meu-prontuario');
+        document.getElementById('patientInfo').innerHTML = `
+          <div class="field"><label>Prontuário</label><p>${prontuario.prontuarioId}</p></div>
+          <div class="field"><label>Paciente ID</label><p>${prontuario.pacienteId}</p></div>
+          <div class="field"><label>Criado em</label><p>${formatDateTime(prontuario.criadoEm)}</p></div>
+        `;
+        renderAlergias(prontuario.alergias || []);
+        renderMedicamentos(prontuario.medicamentosAtivos || []);
+        renderAtendimentos(prontuario.atendimentos || []);
+        renderExames(prontuario.exames || []);
+        document.getElementById('patientSection').style.display = 'block';
+      } catch (err) {
+        showAlert('alert', err.message || 'Erro ao carregar prontuário.', 'error');
+      }
     }
+
+    const cpfEl = document.getElementById('cpfInput');
+    if (cpfEl) cpfEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') buscarPaciente(); });
   </script>
 </body>
 </html>

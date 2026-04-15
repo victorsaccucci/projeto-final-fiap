@@ -18,7 +18,6 @@ public record RegistrarAlergiaRequest(
         @Schema(description = "Reação observada", example = "Edema de glote")
         String reacaoObservada,
 
-        @NotNull(message = "ID do profissional é obrigatório")
-        @Schema(description = "ID do profissional que registrou")
+        @Schema(description = "ID do profissional que registrou (opcional, usa o do token JWT)")
         java.util.UUID registradoPorId
 ) {}
