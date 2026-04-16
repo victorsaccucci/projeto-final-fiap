@@ -169,7 +169,7 @@ sequenceDiagram
 | Tecnologia | Versão | Justificativa |
 |:-----------|:-------|:-------------|
 | **Java** | 21 (LTS) | Performance, tipagem forte, ecossistema maduro para sistemas de saúde |
-| **Spring Boot** | 3.4 | Framework enterprise padrão, suporte a profiles, cache, mensageria e segurança |
+| **Spring Boot** | 3.4.1 | Framework enterprise padrão, suporte a profiles, cache, mensageria e segurança |
 | **PostgreSQL** | 16 | Banco robusto com suporte a JSON, amplamente usado no governo brasileiro |
 | **H2** | — | Banco em memória para desenvolvimento local sem dependências externas |
 | **Redis** | 7 | Cache de alta performance para consultas frequentes de prontuário (TTL configurável) |
@@ -177,9 +177,10 @@ sequenceDiagram
 | **Ollama** | latest | LLM local — dados sensíveis nunca saem do ambiente, sem custo de API, conformidade LGPD |
 | **Docker Compose** | 3.8 | Ambiente reproduzível com um único comando (`docker-compose up`) |
 | **Spring Security + JWT** | — | Autenticação stateless com RBAC (Profissional, Paciente, Gestor) |
-| **Springdoc OpenAPI** | 2.8 | Documentação automática da API com Swagger UI |
-| **jqwik** | 1.9 | Property-based testing para validação de invariantes de domínio |
-| **JaCoCo** | 0.8 | Relatório de cobertura de testes (meta: 80% em domínio e use cases) |
+| **Springdoc OpenAPI** | 2.8.6 | Documentação automática da API com Swagger UI |
+| **jqwik** | 1.9.2 | Property-based testing para validação de invariantes de domínio |
+| **JaCoCo** | 0.8.12 | Relatório de cobertura de testes (meta: 80% em domínio e use cases) |
+| **Testcontainers** | 1.20.4 | Testes de integração com containers reais (PostgreSQL) |
 
 ---
 
@@ -436,19 +437,19 @@ sus-smart-assistant/
 │   │   └── 📂 infrastructure/      #    JPA Entities, Repos, Controllers, DTOs
 │   │
 │   ├── 📂 prontuario/              # 📋 Módulo Prontuário
-│   │   ├── 📂 domain/              #    Entidades: Prontuário, Atendimento, Exame
+│   │   ├── 📂 domain/              #    Entidades: Prontuário, RegistroAtendimento, Exame
 │   │   ├── 📂 application/         #    Use Cases + Ports
 │   │   └── 📂 infrastructure/      #    JPA, Controllers, paginação
 │   │
 │   ├── 📂 assistente/              # 🤖 Módulo Assistente Inteligente
-│   │   ├── 📂 domain/              #    Entidades: SolicitaçãoIA, HipóteseDiagnóstica
+│   │   ├── 📂 domain/              #    Entidades: SolicitacaoIA, HipoteseDiagnostica
 │   │   ├── 📂 application/         #    Use Cases, LlmGateway, PromptBuilder
-│   │   └── 📂 infrastructure/      #    Ollama client, RabbitMQ producer/consumer
+│   │   └── 📂 infrastructure/      #    Ollama client, RabbitMQ producer/consumer, MockLlmGateway
 │   │
 │   ├── 📂 seguranca/               # 🔐 Módulo Segurança/Auditoria
-│   │   ├── 📂 domain/              #    Entidades: Usuário, EventoAuditoria
-│   │   ├── 📂 application/         #    Use Cases de autenticação
-│   │   └── 📂 infrastructure/      #    JWT filter, Spring Security config
+│   │   ├── 📂 domain/              #    Entidades: Usuario, EventoAuditoria
+│   │   ├── 📂 application/         #    Use Cases de autenticação + AuditoriaEventPublisher
+│   │   └── 📂 infrastructure/      #    JWT filter, Spring Security config, RabbitMQ auditoria
 │   │
 │   ├── 📂 metricas/                # 📊 Módulo Métricas
 │   │   ├── 📂 domain/              #    Entidades: MetricasAssistente, DiagnosticoFrequente
@@ -458,7 +459,7 @@ sus-smart-assistant/
 │   └── 📂 shared/                  # 🔧 Módulo Compartilhado
 │       ├── 📂 domain/              #    Value Objects: CPF, CNS, CID, PageResult, Enums
 │       ├── 📂 application/         #    Unidades de Saúde, Profissionais
-│       └── 📂 infrastructure/      #    Exception Handler, DataLoader, configs
+│       └── 📂 infrastructure/      #    Exception Handler, DataLoader, SecurityConfig, CacheConfig
 │
 ├── 📂 src/main/resources/
 │   ├── 📄 application.yml          # Configuração base
@@ -470,10 +471,18 @@ sus-smart-assistant/
 │       ├── 📄 index.html           # Página de login
 │       ├── 📄 dashboard.html       # Busca e visualização de prontuário
 │       ├── 📄 assistente.html      # Assistente IA
+│       ├── 📄 metricas.html        # Dashboard de métricas
 │       ├── 📂 css/style.css
 │       └── 📂 js/app.js
 │
 └── 📂 src/test/java/               # Testes unitários + property-based tests
+    └── 📂 com/sussmartassistant/
+        ├── 📂 paciente/application/     # CadastrarPacienteUseCaseTest, AlergiaUseCasesTest, MedicamentoUseCasesTest
+        ├── 📂 prontuario/application/   # ProntuarioUseCasesTest
+        ├── 📂 assistente/application/   # AssistenteUseCasesTest
+        ├── 📂 metricas/application/     # MetricasUseCasesTest
+        ├── 📂 shared/domain/            # CPFTest, CNSTest, CIDTest (property-based com jqwik)
+        └── 📂 shared/infrastructure/    # CorrelationIdFilterTest, GlobalExceptionHandlerTest
 ```
 
 ---
